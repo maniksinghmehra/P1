@@ -574,6 +574,19 @@ function SettingsScreen({
             <ChevronIcon />
           </button>
         </li>
+        <li>
+          <button
+            className={`lcd-row lcd-row--setting${
+              settingsIndex === 3 ? ' is-selected' : ''
+            }`}
+            type="button"
+            data-selected={settingsIndex === 3}
+            onClick={() => onSelectSetting(3)}
+          >
+            <span className="lcd-row__label">Check Updates</span>
+            <ChevronIcon />
+          </button>
+        </li>
       </ul>
 
       {shareMessage ? (

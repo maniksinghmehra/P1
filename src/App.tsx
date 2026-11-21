@@ -563,6 +563,40 @@ function App() {
     })
   }, [wakeScreen])
 
+  const handleCheckUpdates = useCallback(async () => {
+    playClick()
+    vibrate(8)
+    setShareMessage('Checking GitHub for updates...')
+
+    try {
+      const response = await fetch(
+        'https://api.github.com/repos/maniksinghmehra/P1/releases/latest',
+        { cache: 'no-store' },
+      )
+
+      if (!response.ok) {
+        throw new Error('Failed to reach GitHub Releases')
+      }
+
+      const release = (await response.json()) as {
+        tag_name?: string
+        html_url?: string
+      }
+
+      const latestTag = release.tag_name ?? ''
+      if (latestTag) {
+        setShareMessage(`Version v1.0.0 (Latest on GitHub: ${latestTag})`)
+        if (release.html_url) {
+          window.open(release.html_url, '_blank')
+        }
+      } else {
+        setShareMessage("You're on the latest version (v1.0.0).")
+      }
+    } catch {
+      setShareMessage("You're on the latest version (v1.0.0).")
+    }
+  }, [playClick, vibrate])
+
   const handleSettingPress = useCallback(
     (index: number) => {
       wakeScreen()
@@ -582,8 +616,13 @@ function App() {
         void handleShare()
         return
       }
+
+      if (index === 3) {
+        void handleCheckUpdates()
+        return
+      }
     },
-    [cycleBacklight, handleClickerToggle, handleShare, wakeScreen],
+    [cycleBacklight, handleClickerToggle, handleShare, handleCheckUpdates, wakeScreen],
   )
 
   const handleMenuPress = useCallback(() => {
@@ -876,7 +915,9 @@ function App() {
         ? `Settings. Backlight ${backlight}.`
         : settingsIndex === 1
           ? `Settings. Clicker ${soundEnabled ? 'on' : 'off'}.`
-          : 'Settings. Share player.'
+          : settingsIndex === 2
+            ? 'Settings. Share player.'
+            : 'Settings. Check for updates.'
   } else if (status === 'loading') {
     announcement = 'Loading playlist'
   } else if (status === 'empty') {

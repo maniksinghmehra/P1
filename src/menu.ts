@@ -14,4 +14,4 @@ export const MENU_ITEMS: ReadonlyArray<MenuItem> = [
   { view: 'settings', label: 'Settings', chevron: true },
 ]
 
-export const SETTINGS_ITEM_COUNT = 3
+export const SETTINGS_ITEM_COUNT = 4
