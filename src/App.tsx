@@ -491,20 +491,11 @@ function App() {
         return
       }
 
-      const indices: number[] = []
-      tracks.forEach((track, trackIndex) => {
-        if (track.artist === artist) {
-          indices.push(trackIndex)
-        }
-      })
-
-      const currentInArtist = indices.indexOf(currentIndex)
-
       setArtistFilter(artist)
-      setSelectedIndex(currentInArtist >= 0 ? currentInArtist : 0)
+      setSelectedIndex(0)
       setView('songs')
     },
-    [artists, currentIndex, playClick, tracks, vibrate, wakeScreen],
+    [artists, playClick, vibrate, wakeScreen],
   )
 
   const handleShare = useCallback(async () => {
@@ -671,17 +662,8 @@ function App() {
         return
       }
 
-      const indices: number[] = []
-      tracks.forEach((track, index) => {
-        if (track.artist === artist) {
-          indices.push(index)
-        }
-      })
-
-      const currentInArtist = indices.indexOf(currentIndex)
-
       setArtistFilter(artist)
-      setSelectedIndex(currentInArtist >= 0 ? currentInArtist : 0)
+      setSelectedIndex(0)
       setView('songs')
       return
     }
@@ -940,10 +922,12 @@ function App() {
                 status={status}
                 view={view}
                 tracks={tracks}
+                songs={songs}
                 artists={artists}
                 artistIndex={artistIndex}
                 artistFilter={artistFilter}
                 currentIndex={currentIndex}
+                currentSongIndex={songIndices.indexOf(currentIndex)}
                 selectedIndex={selectedIndex}
                 menuIndex={menuIndex}
                 settingsIndex={settingsIndex}
@@ -960,6 +944,7 @@ function App() {
                 playlistSubView={playlistSubView}
                 onPlaylistSubViewChange={setPlaylistSubView}
                 onSelectTrack={handleTrackPress}
+                onSelectSong={(index) => handleTrackPress(songIndices[index])}
                 onSelectMenu={handleMenuRowPress}
                 onSelectArtist={handleArtistPress}
                 onSelectSetting={handleSettingPress}

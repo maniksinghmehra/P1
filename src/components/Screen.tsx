@@ -11,10 +11,12 @@ interface ScreenProps {
   status: PlaylistStatus
   view: ScreenView
   tracks: Track[]
+  songs: Track[]
   artists: string[]
   artistIndex: number
   artistFilter: string | null
   currentIndex: number
+  currentSongIndex: number
   selectedIndex: number
   menuIndex: number
   settingsIndex: number
@@ -31,6 +33,7 @@ interface ScreenProps {
   playlistSubView?: 'playlists' | 'songs'
   onPlaylistSubViewChange?: (view: 'playlists' | 'songs') => void
   onSelectTrack: (index: number) => void
+  onSelectSong: (index: number) => void
   onSelectMenu: (target: MenuView, index: number) => void
   onSelectArtist: (index: number) => void
   onSelectSetting: (index: number) => void
@@ -345,6 +348,68 @@ function PlaylistsList({
   )
 }
 
+function ArtistsList({
+  artists,
+  artistIndex,
+  onSelectArtist,
+}: {
+  artists: string[]
+  artistIndex: number
+  onSelectArtist: (index: number) => void
+}) {
+  const listRef = useRef<HTMLUListElement>(null)
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      const list = listRef.current
+      const selectedRow = list?.querySelector<HTMLElement>(
+        '[data-selected="true"]',
+      )
+
+      if (!list || !selectedRow) {
+        return
+      }
+
+      const listRect = list.getBoundingClientRect()
+      const rowRect = selectedRow.getBoundingClientRect()
+
+      if (rowRect.top < listRect.top) {
+        list.scrollTop -= listRect.top - rowRect.top
+      } else if (rowRect.bottom > listRect.bottom) {
+        list.scrollTop += rowRect.bottom - listRect.bottom
+      }
+    })
+
+    return () => window.cancelAnimationFrame(frame)
+  }, [artistIndex])
+
+  return (
+    <div className="lcd-page lcd-page--list">
+      <StatusBar label="Artists" detail={`${artists.length} ARTISTS`} />
+      <ul className="lcd-list" ref={listRef} aria-label="Artists">
+        {artists.map((artist, index) => {
+          const selected = index === artistIndex
+
+          return (
+            <li key={artist}>
+              <button
+                className={`lcd-row lcd-row--menu${selected ? ' is-selected' : ''}`}
+                type="button"
+                data-selected={selected}
+                onClick={() => onSelectArtist(index)}
+              >
+                <span className="lcd-row__label">{artist}</span>
+                <ChevronIcon />
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+      <p className="lcd-hint">SELECT TO OPEN · MENU BACK</p>
+    </div>
+  )
+}
+
 function TrackList({
   label,
   exactLabel,
@@ -610,7 +675,12 @@ export function Screen({
   status,
   view,
   tracks,
+  songs,
+  artists,
+  artistIndex,
+  artistFilter,
   currentIndex,
+  currentSongIndex,
   selectedIndex,
   menuIndex,
   settingsIndex,
@@ -627,7 +697,9 @@ export function Screen({
   playlistSubView,
   onPlaylistSubViewChange,
   onSelectTrack,
+  onSelectSong,
   onSelectMenu,
+  onSelectArtist,
   onSelectSetting,
   onSeek,
   onRetry,
@@ -665,6 +737,14 @@ export function Screen({
     content = <Loading />
   } else if (status === 'empty' || status === 'error') {
     content = <EmptyPlaylist isError={status === 'error'} onReload={onReload} />
+  } else if (view === 'artists') {
+    content = (
+      <ArtistsList
+        artists={artists}
+        artistIndex={artistIndex}
+        onSelectArtist={onSelectArtist}
+      />
+    )
   } else if (view === 'playlist') {
     if (playlistView === 'playlists') {
       content = <PlaylistsList onSelectPlaylist={() => setPlaylistView('songs')} />
@@ -684,13 +764,13 @@ export function Screen({
   } else if (view === 'songs') {
     content = (
       <TrackList
-        label={'Songs'}
+        label={artistFilter ?? 'Songs'}
         exactLabel={false}
-        tracks={tracks}
-        currentIndex={currentIndex}
+        tracks={songs}
+        currentIndex={currentSongIndex}
         selectedIndex={selectedIndex}
         isPlaying={isPlaying}
-        onSelectTrack={onSelectTrack}
+        onSelectTrack={onSelectSong}
       />
     )
   } else if (trackError && currentTrack) {
